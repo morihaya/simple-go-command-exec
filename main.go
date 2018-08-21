@@ -5,10 +5,19 @@ import (
 
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/basicauth"
+	"github.com/kataras/iris/middleware/logger"
+	"github.com/kataras/iris/middleware/recover"
 )
 
 func newApp() *iris.Application {
 	app := iris.New()
+
+	app.Logger().SetLevel("debug")
+	// Optionally, add two built'n handlers
+	// that can recover from any http-relative panics
+	// and log the requests to the terminal.
+	app.Use(recover.New())
+	app.Use(logger.New())
 
 	authConfig := basicauth.Config{
 		Users:   map[string]string{"myusername": "mypassword", "mySecondusername": "mySecondpassword"},
@@ -24,7 +33,7 @@ func newApp() *iris.Application {
 		app.Get("/mysecret", authentication, h)
 	*/
 
-	app.Get("/", func(ctx iris.Context) { ctx.Redirect("/admin") })
+	//app.Get("/", func(ctx iris.Context) { ctx.Redirect("/admin") })
 
 	// to party
 
@@ -38,6 +47,25 @@ func newApp() *iris.Application {
 		// http://localhost:8080/admin/settings
 		needAuth.Get("/settings", h)
 	}
+
+	// Method:   GET
+	// Resource: http://localhost:8080
+	app.Handle("GET", "/", func(ctx iris.Context) {
+		ctx.HTML("<h1>Welcome</h1>")
+	})
+
+	// same as app.Handle("GET", "/ping", [...])
+	// Method:   GET
+	// Resource: http://localhost:8080/ping
+	app.Get("/ping", func(ctx iris.Context) {
+		ctx.WriteString("pong")
+	})
+
+	// Method:   GET
+	// Resource: http://localhost:8080/hello
+	app.Get("/hello", func(ctx iris.Context) {
+		ctx.JSON(iris.Map{"message": "Hello Iris!"})
+	})
 
 	return app
 }
