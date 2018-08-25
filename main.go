@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"os/exec"
 	"time"
 
 	"github.com/kataras/iris"
@@ -46,6 +48,8 @@ func newApp() *iris.Application {
 
 		// http://localhost:8080/admin/settings
 		needAuth.Get("/settings", h)
+
+		needAuth.Get("/exec", h)
 	}
 
 	// Method:   GET
@@ -67,6 +71,18 @@ func newApp() *iris.Application {
 		ctx.JSON(iris.Map{"message": "Hello Iris!"})
 	})
 
+	// Method:   GET
+	// Resource: http://localhost:8080/exec
+	app.Get("/exec", func(ctx iris.Context) {
+		out2, _ := exec.Command("date").Output()
+		fmt.Printf("結果: %s", out2)
+		ctx.WriteString(string(out2[:]))
+
+		out, _ := exec.Command("hostname").Output()
+		fmt.Printf("結果: %s", out)
+
+		ctx.WriteString(string(out[:]))
+	})
 	return app
 }
 
