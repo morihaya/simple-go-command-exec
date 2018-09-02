@@ -1,9 +1,9 @@
 <p>コマンドを実行しました。以下のボタンよりログアウトしてください。</p>
-<p><input type="button" value="ログアウト" onclick="location.href='/logout/{{.Provider}}'"></p>
+<p><input class="square_btn" type="button" value="ログアウト" onclick="location.href='/'"></p>
 
 以下は実行コマンドのログです。問題があった場合は管理者へ以下を連絡してください。
-<code>
+<pre>
 {{range $key,$value:=.stdouts}}
-    <p>{{$value}}</a></p>
+{{$value}}
 {{end}}
-</code>
+</pre>

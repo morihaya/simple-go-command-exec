@@ -1,5 +1,7 @@
-<p>ログインするには以下のリンクをクリックしてください。</p>
+<p>ログインするには以下のボタンをクリックしてください。</p>
 
 {{range $key,$value:=.Providers}}
-    <p><a href="/auth/{{$value}}">Log in with {{index $.ProvidersMap $value}}</a></p>
+    <p><input class="square_btn" type="button" value="{{index $.ProvidersMap $value}} でログイン" onclick="location.href='/auth/{{$value}}'"></p>
 {{end}}
+
+

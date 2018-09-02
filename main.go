@@ -215,7 +215,7 @@ func newApp() *iris.Application {
 	)
 
 	m := make(map[string]string)
-	m["gplus"] = "Google Plus"
+	m["gplus"] = "Google Account"
 
 	var keys []string
 	for k := range m {
@@ -226,7 +226,10 @@ func newApp() *iris.Application {
 	providerIndex := &ProviderIndex{Providers: keys, ProvidersMap: m}
 
 	// attach and build our templates
-	app.RegisterView(iris.HTML("./templates", ".html"))
+	app.RegisterView(iris.HTML("./templates", ".html").Layout("layout.html").Reload(true))
+
+	// attach css
+	app.StaticWeb("/public", "./templates/public")
 
 	// start of the router
 	app.Get("/auth/{provider}/callback", func(ctx iris.Context) {
@@ -284,9 +287,11 @@ func newApp() *iris.Application {
 
 			out, _ = exec.Command("date").Output()
 			stdouts = append(stdouts, string(out[:]))
-			//ctx.WriteString(string(out1[:]))
 
 			out, _ = exec.Command("hostname").Output()
+			stdouts = append(stdouts, string(out[:]))
+
+			out, _ = exec.Command("ps").Output()
 			stdouts = append(stdouts, string(out[:]))
 
 			for _, v := range stdouts {
