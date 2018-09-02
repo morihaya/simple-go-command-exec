@@ -1,5 +1,5 @@
 # simple-go-command-exec
-WIP: Simple go command executer
+WIP: Simple go command executor
 
 
 # Frameworks Used
