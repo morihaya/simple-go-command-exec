@@ -6,11 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"time"
 
 	"github.com/gorilla/securecookie"
 	"github.com/kataras/iris"
-	"github.com/kataras/iris/middleware/basicauth"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
 	"github.com/kataras/iris/sessions"
@@ -231,7 +229,6 @@ func newApp() *iris.Application {
 	app.RegisterView(iris.HTML("./templates", ".html"))
 
 	// start of the router
-
 	app.Get("/auth/{provider}/callback", func(ctx iris.Context) {
 
 		user, err := CompleteUserAuth(ctx)
@@ -240,12 +237,14 @@ func newApp() *iris.Application {
 			ctx.Writef("%v", err)
 			return
 		}
+
 		ctx.ViewData("", user)
 		if err := ctx.View("user.html"); err != nil {
 			ctx.Writef("%v", err)
 		}
 	})
 
+	// Logout
 	app.Get("/logout/{provider}", func(ctx iris.Context) {
 		Logout(ctx)
 		ctx.Redirect("/", iris.StatusTemporaryRedirect)
@@ -263,6 +262,7 @@ func newApp() *iris.Application {
 		}
 	})
 
+	// top page
 	app.Get("/", func(ctx iris.Context) {
 
 		ctx.ViewData("", providerIndex)
@@ -272,42 +272,36 @@ func newApp() *iris.Application {
 		}
 	})
 
-	authConfig := basicauth.Config{
-		Users:   map[string]string{"myusername": "mypassword", "mySecondusername": "mySecondpassword"},
-		Realm:   "Authorization Required", // defaults to "Authorization Required"
-		Expires: time.Duration(30) * time.Minute,
-	}
-
-	authentication := basicauth.New(authConfig)
-
-	// to global app.Use(authentication) (or app.UseGlobal before the .Run)
-	// to routes
-	/*
-		app.Get("/mysecret", authentication, h)
-	*/
-
-	//app.Get("/", func(ctx iris.Context) { ctx.Redirect("/admin") })
-
-	// to party
-
-	needAuth := app.Party("/admin", authentication)
-	{
-		//http://localhost:8080/admin
-		needAuth.Get("/", h)
-		// http://localhost:8080/admin/profile
-		needAuth.Get("/profile", h)
-
-		// http://localhost:8080/admin/settings
-		needAuth.Get("/settings", h)
-
-		needAuth.Get("/exec", h)
-	}
-
 	// Method:   GET
-	// Resource: http://localhost:8080
-	//	app.Handle("GET", "/", func(ctx iris.Context) {
-	//		ctx.HTML("<h1>Welcome</h1>")
-	//	})
+	// Resource: http://localhost:8080/exec
+	app.Get("/exec/{provider}", func(ctx iris.Context) {
+		// try to get the user without re-authenticating
+		if _, err := CompleteUserAuth(ctx); err == nil {
+
+			// Os command stdout
+			var stdouts []string
+			var out []byte
+
+			out, _ = exec.Command("date").Output()
+			stdouts = append(stdouts, string(out[:]))
+			//ctx.WriteString(string(out1[:]))
+
+			out, _ = exec.Command("hostname").Output()
+			stdouts = append(stdouts, string(out[:]))
+
+			for _, v := range stdouts {
+				fmt.Printf("CommandOut: %s", v)
+			}
+
+			ctx.ViewData("stdouts", stdouts)
+			if err := ctx.View("exec.html"); err != nil {
+				ctx.Writef("%v", err)
+			}
+		} else {
+			BeginAuthHandler(ctx)
+		}
+
+	})
 
 	// same as app.Handle("GET", "/ping", [...])
 	// Method:   GET
@@ -322,18 +316,6 @@ func newApp() *iris.Application {
 		ctx.JSON(iris.Map{"message": "Hello Iris!"})
 	})
 
-	// Method:   GET
-	// Resource: http://localhost:8080/exec
-	app.Get("/exec", func(ctx iris.Context) {
-		out2, _ := exec.Command("date").Output()
-		fmt.Printf("結果: %s", out2)
-		ctx.WriteString(string(out2[:]))
-
-		out, _ := exec.Command("hostname").Output()
-		fmt.Printf("結果: %s", out)
-
-		ctx.WriteString(string(out[:]))
-	})
 	return app
 }
 
