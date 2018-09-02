@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"sort"
@@ -241,8 +240,11 @@ func newApp() *iris.Application {
 			return
 		}
 
+		// log print
+		app.Logger().Info("LOG: User [" + user.Email + "] logged in")
+
 		ctx.ViewData("", user)
-		if err := ctx.View("user.html"); err != nil {
+		if err := ctx.View("exec.html"); err != nil {
 			ctx.Writef("%v", err)
 		}
 	})
@@ -257,7 +259,7 @@ func newApp() *iris.Application {
 		// try to get the user without re-authenticating
 		if gothUser, err := CompleteUserAuth(ctx); err == nil {
 			ctx.ViewData("", gothUser)
-			if err := ctx.View("user.html"); err != nil {
+			if err := ctx.View("exec.html"); err != nil {
 				ctx.Writef("%v", err)
 			}
 		} else {
@@ -267,6 +269,7 @@ func newApp() *iris.Application {
 
 	// top page
 	app.Get("/", func(ctx iris.Context) {
+		iris.TOML("./configs/config.toml")
 
 		ctx.ViewData("", providerIndex)
 
@@ -285,21 +288,22 @@ func newApp() *iris.Application {
 			var stdouts []string
 			var out []byte
 
-			out, _ = exec.Command("date").Output()
-			stdouts = append(stdouts, string(out[:]))
+			commands := []string{"date", "hostname", "ps"}
 
-			out, _ = exec.Command("hostname").Output()
-			stdouts = append(stdouts, string(out[:]))
+			for _, v := range commands {
+				// log print
+				app.Logger().Info("LOG: Exec command [" + v + "]")
 
-			out, _ = exec.Command("ps").Output()
-			stdouts = append(stdouts, string(out[:]))
+				out, _ = exec.Command(v).Output()
 
-			for _, v := range stdouts {
-				fmt.Printf("CommandOut: %s", v)
+				// log print
+				app.Logger().Info("LOG: Command stdout  \n" + string(out[:]))
+
+				stdouts = append(stdouts, string(out[:]))
 			}
 
 			ctx.ViewData("stdouts", stdouts)
-			if err := ctx.View("exec.html"); err != nil {
+			if err := ctx.View("result.html"); err != nil {
 				ctx.Writef("%v", err)
 			}
 		} else {
@@ -313,12 +317,6 @@ func newApp() *iris.Application {
 	// Resource: http://localhost:8080/ping
 	app.Get("/ping", func(ctx iris.Context) {
 		ctx.WriteString("pong")
-	})
-
-	// Method:   GET
-	// Resource: http://localhost:8080/hello
-	app.Get("/hello", func(ctx iris.Context) {
-		ctx.JSON(iris.Map{"message": "Hello Iris!"})
 	})
 
 	return app
