@@ -203,6 +203,7 @@ func newApp() *iris.Application {
 	app := iris.New()
 
 	app.Logger().SetLevel("debug")
+
 	// Optionally, add two built'n handlers
 	// that can recover from any http-relative panics
 	// and log the requests to the terminal.
@@ -323,9 +324,11 @@ func newApp() *iris.Application {
 }
 
 func main() {
+	var MyServerName string
 	app := newApp()
 	// open http://localhost:8080/admin
-	app.Run(iris.Addr(":8080"))
+	app.Run(iris.Addr(":8080"), iris.WithConfiguration(iris.TOML("./configs/config.toml")))
+	app.config.Other[key]
 }
 
 func h(ctx iris.Context) {
