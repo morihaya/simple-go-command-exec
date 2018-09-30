@@ -324,11 +324,9 @@ func newApp() *iris.Application {
 }
 
 func main() {
-	var MyServerName string
 	app := newApp()
 	// open http://localhost:8080/admin
 	app.Run(iris.Addr(":8080"), iris.WithConfiguration(iris.TOML("./configs/config.toml")))
-	app.config.Other[key]
 }
 
 func h(ctx iris.Context) {
